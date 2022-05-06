@@ -1,0 +1,101 @@
+from my_app.models import *
+import datetime
+from django.db.models import Q, Count, Min, Sum
+
+
+Task1
+Book.objects.filter(publish_date__gt=datetime.date(2000, 1, 1)).count()
+
+
+Task2
+Book.objects.exclude(name__contains = 'A').values('authors__name').distinct()
+
+
+Task3
+max_date = Book.objects.latest("publish_date").publish_date
+Book.objects.filter(Q(publish_date__year=max_date.year) & Q(publish_date__month=max_date.month) & Q(publish_date__day=max_date.day))
+
+min_date = Book.objects.earliest("publish_date").publish_date
+Book.objects.filter(Q(publish_date__year=min_date.year) & Q(publish_date__month=min_date.month) & Q(publish_date__day=min_date.day))
+
+Book.objects.values('name').order_by("publish_date").last()
+Book.objects.values('name').order_by("publish_date").first()
+
+
+Task4
+Author.objects.annotate(num_books=Count('books')).values('name', 'num_books')
+
+
+Task5
+Author.objects.alias(num_books=Count('books')).filter(num_books__gt=5).values('name')
+
+
+Task6
+book = Book.objects.all()
+st = set()
+for elem in book:
+	st.add(elem.publish_date.year)
+
+for year_st in st:
+	for elem in book:
+		if elem.publish_date.year == year_st:
+			print(elem.name)
+			break
+
+
+
+Task7
+Book.objects.values('id', 'name', 'publisher__name')
+
+
+
+Task8
+Author.objects.values('id', 'books__name', 'books__publish_date', 'books__publisher_id')
+
+
+
+Task9
+for elem in Author.objects.raw('SELECT * FROM my_app_author'):
+	print(elem)
+
+
+
+Task10
+print("Exist") if Book.objects.filter(id=100).exists() else print("Does not exist")
+
+
+
+Task11
+Publisher.objects.values('name').filter(Q(books__authors__birth_day__year__gte = 1501) & Q(books__authors__birth_day__year__lte = 1600) | Q(books__authors__birth_day__year__gte = 1701) & Q(books__authors__birth_day__year__lte = 1800)).distinct()
+
+
+
+
+Task12
+print("Такая запись есть!") if Book.objects.filter(name='Эйафьядлаёкюдель').exists() else Book(name='Эйафьядлаёкюдель', publish_date='2022-06-06', price=1000, publisher_id=1).save()
+
+
+
+
+Task13
+Book.objects.bulk_create(
+	[Book(name='Book1', publish_date='2022-06-06', price=1000, publisher_id=1),
+	Book(name='Book2', publish_date='2022-06-06', price=1000, publisher_id=1),
+	Book(name='Book3', publish_date='2022-06-06', price=1000, publisher_id=1),
+	Book(name='Book4', publish_date='2022-06-06', price=1000, publisher_id=1),
+	Book(name='Book5', publish_date='2022-06-06', price=1000, publisher_id=1)])
+
+
+
+Task14
+Author.objects.all().aggregate(Min('birth_day'))['birth_day__min'].year
+
+
+
+Task15
+Publisher.objects.values('name').annotate(total_price=Sum('books__price')).order_by('total_price').last()
+
+
+
+Task16
+Book.objects.filter(price__gt=Sales.objects.filter(date__year='2002')[0].total_sold_usd)
